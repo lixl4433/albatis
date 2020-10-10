@@ -3,22 +3,25 @@ package net.butfly.albatis.neo4j;
 import java.io.IOException;
 import java.util.List;
 
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.GraphDatabase;
-
-import net.butfly.albatis.DataConnection;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.GraphDatabase;
 
 import net.butfly.albacore.io.URISpec;
 import net.butfly.albacore.utils.collection.Colls;
+import net.butfly.albatis.DataConnection;
 
-public class Neo4jConnection extends DataConnection<org.neo4j.driver.v1.Driver> {
+public class Neo4jConnection extends DataConnection<org.neo4j.driver.Driver> {
+	
+	protected org.neo4j.driver.Driver driver;
+	
 	public Neo4jConnection(URISpec uri) throws IOException {
 		super(uri, 7687, "neo4j", "bolt");
 	}
 
 	@Override
-	protected org.neo4j.driver.v1.Driver initialize(URISpec uri) {
-		return GraphDatabase.driver(uri.toString(), AuthTokens.basic(uri.getUsername(), uri.getPassword()));
+	protected org.neo4j.driver.Driver initialize(URISpec uri) {
+		driver = GraphDatabase.driver(uri.toString(), AuthTokens.basic(uri.getUsername(), uri.getPassword()));
+		return driver;
 	}
 
 	@Override
