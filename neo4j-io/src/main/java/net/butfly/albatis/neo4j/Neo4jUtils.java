@@ -80,7 +80,7 @@ public class Neo4jUtils {
 	 * @param r
 	 * @return 
 	 */
-	public static int upsertRelation(Neo4jRelation r) {
+	public int upsertRelation(Neo4jRelation r) {
 		try {
 			String cql = Neo4jLanguage.getUpsertRelationNQL(r);
 			System.out.println(cql);

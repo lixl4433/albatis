@@ -9,6 +9,7 @@ import org.neo4j.driver.GraphDatabase;
 import net.butfly.albacore.io.URISpec;
 import net.butfly.albacore.utils.collection.Colls;
 import net.butfly.albatis.DataConnection;
+import net.butfly.albatis.ddl.TableDesc;
 
 public class Neo4jConnection extends DataConnection<org.neo4j.driver.Driver> {
 	
@@ -20,7 +21,7 @@ public class Neo4jConnection extends DataConnection<org.neo4j.driver.Driver> {
 
 	@Override
 	protected org.neo4j.driver.Driver initialize(URISpec uri) {
-		driver = GraphDatabase.driver(uri.toString(), AuthTokens.basic(uri.getUsername(), uri.getPassword()));
+		driver = GraphDatabase.driver(uri.getSchema()+"://"+uri.getHost()+"/"+uri.getFile(), AuthTokens.basic(uri.getUsername(), uri.getPassword()));
 		return driver;
 	}
 
@@ -43,5 +44,11 @@ public class Neo4jConnection extends DataConnection<org.neo4j.driver.Driver> {
 		public List<String> schemas() {
 			return Colls.list("neo4j", "bolt");
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public Neo4jOutput outputRaw(TableDesc... table) throws IOException {
+		return new Neo4jOutput("neo4jOutput", this);
 	}
 }

@@ -27,7 +27,12 @@ public class Neo4jOutput extends OutputBase<Neo4jRelation> {
 	}
 	@Override
 	protected void enqsafe(Sdream<Neo4jRelation> rs) {
-		rs.each(r -> Neo4jUtils.upsertRelation(r));
+		rs.each(r -> {
+			Neo4jUtils neo4jUtils = new Neo4jUtils(conn);
+			neo4jUtils.upsertNode(r.from);
+			neo4jUtils.upsertNode(r.to);
+			neo4jUtils.upsertRelation(r);
+		});
 	}
 
 }

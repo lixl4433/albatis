@@ -14,7 +14,7 @@ public class Neo4jInput extends net.butfly.albacore.base.Namedly implements OddI
 	
 	private final Neo4jConnection conn;
 	
-	public Neo4jInput(String name, Neo4jConnection conn) throws IOException {
+	protected Neo4jInput(String name, Neo4jConnection conn) throws IOException {
 		super(name);
 		this.conn = conn;
 		closing(this::closeNeo4j);
