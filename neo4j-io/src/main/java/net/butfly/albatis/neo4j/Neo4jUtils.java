@@ -54,7 +54,7 @@ public class Neo4jUtils {
 	
 	
 	public void close() {
-		asyncSession.closeAsync();
+		//asyncSession.closeAsync();
 		driver.closeAsync();
 	}
 	
