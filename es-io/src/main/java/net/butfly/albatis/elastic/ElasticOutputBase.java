@@ -92,7 +92,7 @@ public abstract class ElasticOutputBase<T extends DataConnection<?> & ElasticCon
 		List<Rmap> retries = Colls.list();
 		if (null != response) for (BulkItemResponse r : response) {
 			Rmap o = remains.remove(r.getIndex() + "/" + r.getType() + r.getId());
-			o.remove("ocr_result");
+			o.remove("context");
 			o.remove("tag");
 			o.remove("tags");
 			if (!r.isFailed()) {

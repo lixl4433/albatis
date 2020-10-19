@@ -143,15 +143,15 @@ public class Neo4jLanguage {
 	
 	
 	/**
-	  *    ɾ����ϵ�﷨</br>
-	 *  1. match ()-[r:LGRZ {ZZLSH:"zhlsh1111111"}]-() delete r   //ֻ�й�ϵ����Ϣʱ��ɾ���﷨ </br>
-	 *  2. match ()-[r:LGRZ]-() delete r   // </br>ɾ�����нڵ�֮���ĳһ��ϵ
-	 *  3. match ()-[r]-() delete r   //</br>ɾ�����нڵ�֮������
-	 *  4.MATCH (n1:Database)<-[r]->(n2:Message) DELETE r //ɾ��ĳ����ڵ�֮������й�ϵ</br>
-	 *  5.MATCH (n1:Database)<-[r:SAYS {"id":"22","name":"xxx"}]->(n2:Message) DELETE r //ɾ��ĳ����ڵ�֮���ĳһ����ϵ</br>
-	 *  6.MATCH (n1:Database)<-[r:SAYS]->(n2:Message) DELETE r //ɾ��ĳ����ڵ�֮���ĳһ���ϵ</br>
-	 *  7. MATCH (n1:Database {"id":"121","name":"xxx"})<-[r:SAYS {"id":"22","name":"xxx"}]->(n2:Message {"id":"121","name":"xxx"}) DELETE r  //ɾ��ĳ�����ڵ�֮���ĳһ����ϵ</br>
-	 *  8. MATCH (n1:Database {"id":"121","name":"xxx"})<-[r:SAYS]->(n2:Message {"id":"121","name":"xxx"}) DELETE r  //ɾ��ĳ�����ڵ�֮���ĳһ�ֹ�ϵ</br>
+	 *    </br>
+	 *  1. match ()-[r:LGRZ {ZZLSH:"zhlsh1111111"}]-() delete r   //ֻ</br>
+	 *  2. match ()-[r:LGRZ]-() delete r   // </br>
+	 *  3. match ()-[r]-() delete r   //</br>
+	 *  4.MATCH (n1:Database)<-[r]->(n2:Message) DELETE r //</br>
+	 *  5.MATCH (n1:Database)<-[r:SAYS {"id":"22","name":"xxx"}]->(n2:Message) DELETE r //</br>
+	 *  6.MATCH (n1:Database)<-[r:SAYS]->(n2:Message) DELETE r //</br>
+	 *  7. MATCH (n1:Database {"id":"121","name":"xxx"})<-[r:SAYS {"id":"22","name":"xxx"}]->(n2:Message {"id":"121","name":"xxx"}) DELETE r  //</br>
+	 *  8. MATCH (n1:Database {"id":"121","name":"xxx"})<-[r:SAYS]->(n2:Message {"id":"121","name":"xxx"}) DELETE r  //</br>
 	 * @throws Exception 
 	 */
 	public static String getDeleteRelationCql(Neo4jRelation r) {
