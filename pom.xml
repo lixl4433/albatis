@@ -5,11 +5,13 @@
 		<groupId>net.butfly</groupId>
 		<artifactId>parent</artifactId>
 		<version>3.1.0-SNAPSHOT</version>
+		<relativePath>butfly.pom</relativePath>
 	</parent>
 	<groupId>net.butfly.albatis</groupId>
 	<artifactId>albatis</artifactId>
 	<version>1.6.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
+	
 	<properties>
 		<maven.compiler.source>8</maven.compiler.source>
 		<maven.compiler.target>8</maven.compiler.target>
@@ -138,16 +140,12 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+		<!--
 	<repositories>
 		<repository>
 			<id>cdh</id>
 			<name>cdh repository</name>
 			<url>http://repository.cloudera.com/content/repositories/releases/</url>
 		</repository>
-	</repositories>
-	<scm>
-		<connection>https://bitbucket.org/butfly/albatis.git</connection>
-		<developerConnection>https://butfly@bitbucket.org/butfly/albatis.git</developerConnection>
-		<url>https://bitbucket.org/butfly/albatis</url>
-	</scm>
+	</repositories> -->
 </project>
