@@ -129,5 +129,30 @@
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-to-slf4j</artifactId>
 		</dependency>
+		
+				<dependency>
+			<groupId>org.elasticsearch</groupId>
+			<artifactId>x-pack</artifactId>
+			<version>6.8.3</version>
+			<classifier>core</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.elasticsearch</groupId>
+			<artifactId>x-pack</artifactId>
+			<version>6.8.3</version>
+			<classifier>transport</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.unboundid</groupId>
+			<artifactId>unboundid-ldapsdk</artifactId>
+			<version>4.0.8</version>
+			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>*</artifactId>
+					<groupId>*</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 	</dependencies>
 </project>

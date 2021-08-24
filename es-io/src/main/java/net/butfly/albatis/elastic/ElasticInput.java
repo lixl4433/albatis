@@ -31,7 +31,6 @@ public final class ElasticInput extends net.butfly.albacore.base.Namedly impleme
 	private QueryBuilder query;
 	private ConcurrentLinkedQueue<Rmap> datas = new ConcurrentLinkedQueue<Rmap>();
 	private AtomicBoolean es_has_data = new AtomicBoolean(true);
-	private AtomicBoolean queue_is_not_enough_data = new AtomicBoolean(true);
 	private AtomicBoolean is_first = new AtomicBoolean(true);
 
 	public ElasticInput(String name, ElasticConnection conn) throws IOException {
@@ -118,9 +117,6 @@ public final class ElasticInput extends net.butfly.albacore.base.Namedly impleme
 	@Override
 	public Rmap dequeue() {
 		if(is_first.get()) add();
-		if(datas.size() < 30) {
-			queue_is_not_enough_data.set(true);
-		}
 		return datas.poll();
 	}
 	
@@ -129,7 +125,7 @@ public final class ElasticInput extends net.butfly.albacore.base.Namedly impleme
 		new Thread(()->{
 			SearchResponse ss = null;
 			while(es_has_data.get()) {
-				if(queue_is_not_enough_data.get()) {
+				if(datas.size() < 30) {
 					if (ss == null) {
 						ss = scanType();
 					} else {
@@ -152,9 +148,8 @@ public final class ElasticInput extends net.butfly.albacore.base.Namedly impleme
 						}
 						datas.add(ramp);
 					}
-					queue_is_not_enough_data.set(true);
 				}
 			}
-		}).start();;
+		}).start();
 	}
 }

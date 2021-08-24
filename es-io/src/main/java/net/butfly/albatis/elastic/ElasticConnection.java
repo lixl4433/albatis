@@ -8,23 +8,39 @@ import net.butfly.albatis.DataConnection;
 import net.butfly.albatis.ddl.FieldDesc;
 import net.butfly.albatis.ddl.Qualifier;
 import net.butfly.albatis.ddl.TableDesc;
+
+import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.bulk.BackoffPolicy;
+import org.elasticsearch.action.bulk.BulkProcessor;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.common.unit.ByteSizeUnit;
+import org.elasticsearch.common.unit.ByteSizeValue;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
 import static net.butfly.albacore.utils.collection.Colls.empty;
 
 public class ElasticConnection extends DataConnection<TransportClient> implements ElasticConnect {
 	public ElasticConnection(URISpec uri, Map<String, String> props) throws IOException {
-		super(uri.extra(props), 39300, "es", "elastic", "elasticsearch");
+		super(uri.extra(props), 39300, "es", "elastic", "elasticsearch", "xpack");
 	}
 
 	public ElasticConnection(URISpec uri) throws IOException {
@@ -41,7 +57,10 @@ public class ElasticConnection extends DataConnection<TransportClient> implement
 
 	@Override
 	protected TransportClient initialize(URISpec uri) {
-		return ElasticConnect.Builder.buildTransportClient(uri, uri.extras);
+		if(!"xpack".equals(uri.getSchema(0)))
+			return ElasticConnect.Builder.buildTransportClient(uri, uri.extras);
+		else
+			return xpackClient(uri);
 	}
 
 	@Override
@@ -195,5 +214,38 @@ public class ElasticConnection extends DataConnection<TransportClient> implement
 		AcknowledgedResponse r = client.admin().indices().putMapping(req.type(its[1])).actionGet();
 		if (!r.isAcknowledged()) logger().error("Mapping failed on type [" + its[1] + "]" + req.toString());
 		else logger().info(() -> "Mapping on " + its + " construced sussesfully.");
+	}
+	
+	public TransportClient xpackClient(URISpec urispec) {
+		TransportClient client = null;
+		try {
+			String ips = urispec.getHost();
+			String cluster = urispec.getFile();
+			String username = urispec.getUsername();
+			String password = urispec.getPassword();
+			String keypath = urispec.getParameter("keypath");
+			
+			Settings settings = Settings.builder().put("cluster.name", cluster)
+					.put("xpack.security.user", username + ":" + password)
+					.put("client.transport.sniff", false)
+					.put("xpack.security.enabled", true)
+					.put("xpack.security.transport.ssl.enabled", true)
+					.put("xpack.security.transport.ssl.keystore.path", keypath)// 这里的文件要保证能访问到
+					.put("xpack.security.transport.ssl.truststore.path", keypath)
+					.put("xpack.security.transport.ssl.verification_mode", "certificate")
+					// .put("client.ping.timeout", client_ping_timeout)
+					.build();
+			client = new PreBuiltXPackTransportClient(settings);
+			List<TransportAddress> transportAddresses = new ArrayList<>();
+			for (String node : Arrays.asList(ips.split(",")))
+				transportAddresses.add(new TransportAddress(InetAddress.getByName(node.split(":")[0]),
+						Integer.parseInt(node.split(":")[1])));
+			client.addTransportAddresses(
+					transportAddresses.toArray(new TransportAddress[transportAddresses.size()]));
+			System.out.println("-------------------");
+		}catch (Exception e) {
+			logger().info(e.getMessage());
+		}
+		return client;
 	}
 }

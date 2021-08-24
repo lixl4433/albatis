@@ -92,24 +92,25 @@ public abstract class ElasticOutputBase<T extends DataConnection<?> & ElasticCon
 		List<Rmap> retries = Colls.list();
 		if (null != response) for (BulkItemResponse r : response) {
 			Rmap o = remains.remove(r.getIndex() + "/" + r.getType() + r.getId());
-			o.remove("context");
-			o.remove("tag");
-			o.remove("tags");
 			if (!r.isFailed()) {
 				succs++;
-				if (null != o && null != r.getResponse()) logger.info(() -> //
-				"es writing successed: \n\tData: " + o.toString() + "\n\tResp: " + r.getResponse().toString());
+				/*
+				if (null != o && null != r.getResponse()) {
+					if(o.containsKey("ocr_result"))
+						o.remove("ocr_result");
+					logger.info(() -> "es writing successed: \n\tData: " + o.toString() + "\n\tResp: " + r.getResponse().toString());
+				}*/
 			} else if (null != o) {
-				if (noRetry(r.getFailure().getCause())) logger.error(() -> //
-				"ElasticOutput [" + name() + "] failed for [" + unwrap(r.getFailure().getCause()).toString() + "]: \n\t" + o.toString());
+				if (noRetry(r.getFailure().getCause())) {
+					if(o.containsKey("ocr_result"))
+						o.remove("ocr_result");
+					logger.error(() -> "ElasticOutput [" + name() + "] failed for [" + unwrap(r.getFailure().getCause()).toString() + "]: \n\t" + o.toString());
+				}
 				else retries.add(o);
 			}
 		}
-		if (succs > 0) succeeded(succs);
 		// process failing and retry...
 		if (!retries.isEmpty()) failed(of(retries));
-		// logger.error("INFO: es op resp parsed: resps [" + respSize + "], remains [" + originalSize + "=>" + remains.size() + "], "//
-		// + "success [" + succs + "], failover [" + retries.size() + "].");
 	}
 
 	abstract boolean noRetry(Throwable cause);
