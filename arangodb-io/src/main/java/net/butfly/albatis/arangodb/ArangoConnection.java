@@ -115,13 +115,16 @@ public class ArangoConnection extends DataConnection<ArangoDBAsync> {
 
 	public CompletableFuture<List<BaseDocument>> exec(String aql, Map<String, Object> param) {
 		long t = System.currentTimeMillis();
+		System.out.println(aql);
 		return db.query(aql, param, null, BaseDocument.class).thenApplyAsync(c -> {
 			long tt = System.currentTimeMillis() - t;
 			logger().trace(() -> {
 				long total = count.incrementAndGet();
 				String avg = AVG.format(((double) spent.addAndGet(tt)) / total);
-				return "AQL: [spent " + tt + " ms, total " + total + ", avg " + avg + " ms] with aql: " + aql //
+				String info ="AQL: [spent " + tt + " ms, total " + total + ", avg " + avg + " ms] with aql: " + aql //
 						+ (Colls.empty(param) ? "" : "\n\tparams: " + param) + ".";
+				System.out.println(info);
+				return info;
 			});
 			return c.asListRemaining();
 		}, Exeter.of());
@@ -135,11 +138,12 @@ public class ArangoConnection extends DataConnection<ArangoDBAsync> {
 			throw new RuntimeException(e);
 		} catch (ExecutionException e) {
 			Throwable ee = e.getCause();
-			if (ee instanceof ArangoDBException)
-				// ArangoDBException ae = (ArangoDBException) ee;
-				// if (503 == ae.getResponseCode() && 21003 == ae.getErrorNum())
-				// logger.error("fail: " + ae.getMessage());
+			if (ee instanceof ArangoDBException) {
+				 ArangoDBException ae = (ArangoDBException) ee;
+				if (503 == ae.getResponseCode() && 21003 == ae.getErrorNum())
+				logger.error("fail: " + ae.getMessage());
 				return null;
+			}
 			logger.error("fail", ee);
 			throw ee instanceof RuntimeException ? (RuntimeException) ee : new RuntimeException(ee);
 		} catch (TimeoutException e) {

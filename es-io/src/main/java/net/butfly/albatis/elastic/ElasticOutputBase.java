@@ -27,7 +27,7 @@ import net.butfly.albatis.io.Rmap;
 public abstract class ElasticOutputBase<T extends DataConnection<?> & ElasticConnect> extends OutputBase<Rmap> {
 	private static final long serialVersionUID = 1874320396863861434L;
 	static final Logger logger = Logger.getLogger(ElasticOutput.class);
-	public static final int MAX_RETRY = 3;
+	public static final int MAX_RETRY = 10;
 	public static final int SUGGEST_BATCH_SIZE = 1000;
 	protected final T conn;
 

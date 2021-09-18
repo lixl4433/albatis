@@ -16,7 +16,7 @@ import net.butfly.albacore.utils.logger.Logger;
 public class ElasticOutput extends ElasticOutputBase<ElasticConnection> {
 	private static final long serialVersionUID = 1874320396863861434L;
 	static final Logger logger = Logger.getLogger(ElasticOutput.class);
-	public static final int MAX_RETRY = 3;
+	public static final int MAX_RETRY = 1000;
 	public static final int SUGGEST_BATCH_SIZE = 1000;
 
 	public ElasticOutput(String name, ElasticConnection conn) throws IOException {
