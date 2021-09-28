@@ -1,8 +1,10 @@
 package net.butfly.albatis.arangodb;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -21,8 +23,12 @@ import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.model.GraphCreateOptions;
 
 import net.butfly.albacore.io.URISpec;
+import net.butfly.albatis.Connection;
+import net.butfly.albatis.DataConnection;
+import net.butfly.albatis.ddl.TableDesc;
+import net.butfly.albatis.io.IOFactory;
 
-public class ArangoDBConnection {
+public class ArangoDBConnection extends DataConnection<ArangoDBAsync>{
 
 	private static final Logger logger = LoggerFactory.getLogger(ArangoDBConnection.class);
 	//连接池 最大连接数
@@ -45,6 +51,8 @@ public class ArangoDBConnection {
 	private String pwd;
 	public ArangoDBAsync db;
 	public ArangoDatabaseAsync database; 
+	
+	public URISpec uri;
 
 	public ArangoDBConnection ips(String ips) {
 		try {
@@ -113,11 +121,11 @@ public class ArangoDBConnection {
 		}
 		return  db = b.chunksize(0 == chunk_size ? default_chunk_size : chunk_size).build();
 	}
-	
+	/*
 	public void close() {
 		db.shutdown();
 	}
-	
+	*/
 	
 	public ArangoDBConnection connect(String ips, int port, String userName, String pwd, String db) {
 		database = this
@@ -133,10 +141,31 @@ public class ArangoDBConnection {
 		return this;
 	}
 	
-	public ArangoDBConnection connect(URISpec uri) {
-		uri.get
-		this.connect(uri.get, port, userName, pwd, pwd)
-		return this;
+	public ArangoDBConnection(URISpec uri) throws IOException {
+		super(uri, 8529, "arango", "arangodb");
+		this.uri = uri;
+	}
+	
+	@Override
+	protected ArangoDBAsync initialize(URISpec uri) {
+		String password = uri.getPassword();
+		String username = uri.getUsername();
+		String db = uri.getFile();
+		String host = uri.getHost();
+		String ips = StringUtils.join(Arrays.asList(host.split(",")).stream().map(t -> t.split(":")[0]).collect(Collectors.toList()),",");
+		int port = Integer.parseInt(host.split(",")[0].split(":")[1]);
+		ArangoDBAsync initialize = this
+				.ips(ips)
+				.port(port)
+				.userName(username)
+				.pwd(password)
+				.max_connections(max_connections > 0 ? max_connections : defaut_max_connections)
+				.chunk_size(chunk_size > 0 ? chunk_size : default_chunk_size)
+				.timeout_secs(timeout_secs > 0 ? timeout_secs : defaut_timeout_secs)
+				.initialize();
+		database = initialize.db(db);
+		this.db = initialize;
+		return initialize;
 	}
 	
 	public <T> List<T> executeAQL(String aql, Class<T> clazz) {
@@ -437,5 +466,17 @@ public class ArangoDBConnection {
 			logger.info("fialed : add node["+_edge+"] .");
 		}
 		return 1;
+	}
+	
+	
+	@Override
+	public void close() throws IOException {
+		db.shutdown();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public ArangoOutput outputRaw(TableDesc... table) throws IOException {
+		return new ArangoOutput("ArangoOutput", this);
 	}
 }

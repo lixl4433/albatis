@@ -19,17 +19,6 @@
 			<artifactId>albatis-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>com.arangodb</groupId>
-			<artifactId>arangodb-java-driver-async</artifactId>
-			<version>6.8.0</version>
-			<exclusions>
-				<exclusion>
-					<groupId>junit</groupId>
-					<artifactId>junit</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
 		<!--json转换 -->
 		<dependency>
 			<groupId>com.alibaba</groupId>
@@ -39,7 +28,7 @@
 		<dependency>
 			<groupId>com.arangodb</groupId>
 			<artifactId>arangodb-java-driver</artifactId>
-			<version>6.8.0</version>
+			<version>6.13.0</version>
 		</dependency>
 	</dependencies>
 </project>

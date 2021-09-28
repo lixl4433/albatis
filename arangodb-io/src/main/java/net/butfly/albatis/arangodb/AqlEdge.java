@@ -1,7 +1,14 @@
 package net.butfly.albatis.arangodb;
 
+import net.butfly.albatis.io.Rmap;
+
 //[{"_key":"1","_id":"friends/1","_from":"people/1","_to":"people/2","_rev":"_bxgJIFi---","rel":"朋友"}]
-public class AqlEdge{
+public class AqlEdge extends Rmap{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	private ArangoDBNode from;
 	private ArangoDBNode to;
 	private ArangoDBEdge edge;
