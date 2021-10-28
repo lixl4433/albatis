@@ -2,6 +2,7 @@ package net.butfly.albatis.arangodb;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
@@ -9,6 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSONObject;
+
+import net.butfly.albacore.utils.collection.Maps;
+import web.base.service.arangodb.ArangoDBEdge;
+import web.base.service.arangodb.ArangoDBEntity;
+import web.base.service.arangodb.ArangoDBNode;
 
 public class ArangoDBEntity extends ConcurrentHashMap<Object, Object>{
 	
@@ -52,5 +58,21 @@ public class ArangoDBEntity extends ConcurrentHashMap<Object, Object>{
 		}
 		
 		return this;
+	}
+	
+	public static Map<String, Object> toMap(ArangoDBEntity data){
+		Map<String, Object> map = new HashMap<String, Object>();
+		if(data instanceof ArangoDBNode) {
+			ArangoDBNode node = (ArangoDBNode)data;
+			map = Maps.of("id", node.table+"/"+node.key);
+			for (Entry<Object, Object> kv : node.entrySet()) map.put(kv.getKey().toString(), kv.getValue());
+		}else if(data instanceof ArangoDBEdge){
+			ArangoDBEdge edge = (ArangoDBEdge)data;
+			map = Maps.of("id", edge.table+"/"+edge.key, "_form", edge.from, "_to", edge.to);
+			for (Entry<Object, Object> kv : edge.entrySet()) map.put(kv.getKey().toString(), kv.getValue());
+		}else {
+			logger.info("unsurport data type");
+		}
+		return map;
 	}
 }

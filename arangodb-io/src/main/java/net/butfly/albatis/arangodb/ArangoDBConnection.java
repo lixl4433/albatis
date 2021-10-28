@@ -1,10 +1,9 @@
 package net.butfly.albatis.arangodb;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -16,43 +15,37 @@ import com.arangodb.async.ArangoDBAsync;
 import com.arangodb.async.ArangoDBAsync.Builder;
 import com.arangodb.async.ArangoDatabaseAsync;
 import com.arangodb.async.ArangoGraphAsync;
+import com.arangodb.entity.BaseDocument;
 import com.arangodb.entity.CollectionType;
 import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.entity.LoadBalancingStrategy;
 import com.arangodb.model.CollectionCreateOptions;
 import com.arangodb.model.GraphCreateOptions;
 
-import net.butfly.albacore.io.URISpec;
-import net.butfly.albatis.Connection;
-import net.butfly.albatis.DataConnection;
-import net.butfly.albatis.ddl.TableDesc;
-import net.butfly.albatis.io.IOFactory;
-
-public class ArangoDBConnection extends DataConnection<ArangoDBAsync>{
+public class ArangoDBConnection {
 
 	private static final Logger logger = LoggerFactory.getLogger(ArangoDBConnection.class);
-	//连接池 最大连接数
+	/*** connection pool , max connection number. */
 	private int max_connections;
 	private static final int defaut_max_connections = 16;
-	//连接超时时间
+	/*** connection timeout*/
 	private int timeout_secs;
 	private static final int defaut_timeout_secs = 10*60*1000;
-	// VelocyStream Chunk content-size (bytes)	30000 , VelocyStream是双向异步二进制协议，支持通过管道，多路复用，单向或双向发送消息。
-	//chunk_size VelocyStream 快的大小单位byte
+	/**
+	 * VelocyStream Chunk content-size (bytes)	30000 , VelocyStream是双向异步二进制协议，支持通过管道，多路复用，单向或双向发送消息。
+	 * chunk_size VelocyStream block . (byte)
+	 */
 	private int chunk_size; 
 	private static final int default_chunk_size = 5*1024*1024;
-	//集群、单节点ip
+	/*** cluster/single ip*/
 	private String[] ips;
-	//端口
 	private int port;
-	//用户 Basic Authentication User
+	/*** user ,  Basic Authentication User */
 	private String userName;
-	//密码  Basic Authentication Password
+	/*** pwd ,  Basic Authentication Password*/
 	private String pwd;
 	public ArangoDBAsync db;
 	public ArangoDatabaseAsync database; 
-	
-	public URISpec uri;
 
 	public ArangoDBConnection ips(String ips) {
 		try {
@@ -121,11 +114,11 @@ public class ArangoDBConnection extends DataConnection<ArangoDBAsync>{
 		}
 		return  db = b.chunksize(0 == chunk_size ? default_chunk_size : chunk_size).build();
 	}
-	/*
+	
 	public void close() {
 		db.shutdown();
 	}
-	*/
+	
 	
 	public ArangoDBConnection connect(String ips, int port, String userName, String pwd, String db) {
 		database = this
@@ -141,40 +134,13 @@ public class ArangoDBConnection extends DataConnection<ArangoDBAsync>{
 		return this;
 	}
 	
-	public ArangoDBConnection(URISpec uri) throws IOException {
-		super(uri, 8529, "arango", "arangodb");
-		this.uri = uri;
-	}
-	
-	@Override
-	protected ArangoDBAsync initialize(URISpec uri) {
-		String password = uri.getPassword();
-		String username = uri.getUsername();
-		String db = uri.getFile();
-		String host = uri.getHost();
-		String ips = StringUtils.join(Arrays.asList(host.split(",")).stream().map(t -> t.split(":")[0]).collect(Collectors.toList()),",");
-		int port = Integer.parseInt(host.split(",")[0].split(":")[1]);
-		ArangoDBAsync initialize = this
-				.ips(ips)
-				.port(port)
-				.userName(username)
-				.pwd(password)
-				.max_connections(max_connections > 0 ? max_connections : defaut_max_connections)
-				.chunk_size(chunk_size > 0 ? chunk_size : default_chunk_size)
-				.timeout_secs(timeout_secs > 0 ? timeout_secs : defaut_timeout_secs)
-				.initialize();
-		database = initialize.db(db);
-		this.db = initialize;
-		return initialize;
-	}
-	
 	public <T> List<T> executeAQL(String aql, Class<T> clazz) {
 		return database.query(aql, clazz).toCompletableFuture().join().asListRemaining();
 	}
 	
 	/**
-	 * @param name 节点名称
-	 * @return 0 失败 1 成功 2 已存在
+	 * @param name . node name
+	 * @return 0 failed 1 success 2 exist
 	 */
 	public int createNodeCollection(String name) {
 		try {
@@ -197,8 +163,8 @@ public class ArangoDBConnection extends DataConnection<ArangoDBAsync>{
 	}
 	
 	/**
-	 * @param name 边名称
-	 * @return 0 失败 1 成功 2 已存在
+	 * @param name . edge name
+	 * @return 0 failed 1 success 2 exist
 	 */
 	public int createEdgeCollection(String name) {
 		try {
@@ -253,7 +219,7 @@ public class ArangoDBConnection extends DataConnection<ArangoDBAsync>{
 	
 	
 	/**
-	 * 更新关系如图
+	 * update graph settings
 	 * @param graph  graph_name
 	 * @param edge_name edge_name
 	 * @param from  from_node_name
@@ -289,40 +255,21 @@ public class ArangoDBConnection extends DataConnection<ArangoDBAsync>{
 	 * @param data
 	 * @return 0 success  1 failed
 	 */
+	@Deprecated
 	public int upsertNode(ArangoDBNode data) {
-		try {
-			String aql = ArangoDBLanguage.getUpsertNodeAQL(data);
-			//logger.info(aql);
-			List<String> result = this.executeAQL(aql, String.class);
-		//	if (result.size() > 0)
-				//logger.debug("success : " + result.get(0));
-			return 0;
-		} catch (Exception e) {
-			logger.error("failed : " + e.getMessage());
-		}
-		return 1;
+		return this.upsert(ArangoDBEntity.toMap(data));
 	}
 	
 	/**
 	 * arangodb node batch upsert
 	 * @param List<ArangoDBNode> datas
 	 * @return 0 success  1 failed
-	 * @apiNote 无序插入
+	 * @apiNote disorder insert
 	 */
+	@Deprecated
 	public int upsertNodes(List<ArangoDBNode> datas) {
 		try {
-			datas.parallelStream().forEach(data ->{
-				List<String> result = new ArrayList<>();
-				try {
-					String aql = ArangoDBLanguage.getUpsertNodeAQL(data);
-					//logger.info(aql);
-					result = this.executeAQL(aql, String.class);
-				} catch (Exception e) {
-					logger.info("failed : "+data);
-				}
-				//if(result.size()>0) 
-				//	logger.info("success : "+result.get(0));
-			});
+			datas.parallelStream().forEach(data -> this.upsert(ArangoDBEntity.toMap(data)));
 			return 0;
 		}catch (Exception e) {
 		}
@@ -334,40 +281,21 @@ public class ArangoDBConnection extends DataConnection<ArangoDBAsync>{
 	 * @param data
 	 * @return 0 success  1 failed
 	 */
+	@Deprecated
 	public int upsertEdge(ArangoDBEdge data) {
-		try {
-			String aql = ArangoDBLanguage.getUpsertEdgeAQL(data);
-			//logger.info(aql);
-			List<String> result = this.executeAQL(aql, String.class);
-			//if(result.size()>0) 
-				//logger.debug("success : "+result.get(0));
-			return 0;
-		} catch (Exception e) {
-			logger.error("failed : "+e.getMessage());
-		}
-		return 1;
+		return this.upsert(ArangoDBEntity.toMap(data));
 	}
 	
 	/**
 	 * arangodb edge batch upsert
 	 * @param List<ArangoDBEdge> datas
 	 * @return 0 success  1 failed
-	 * @apiNote 无序插入
+	 * @apiNote disorder insert
 	 */
+	@Deprecated
 	public int upsertEdges(List<ArangoDBEdge> datas) {
 		try {
-			datas.parallelStream().forEach(data ->{
-				List<String> result = new ArrayList<>();
-				try {
-					String aql = ArangoDBLanguage.getUpsertEdgeAQL(data);
-				//	logger.info(aql);
-					result = this.executeAQL(aql, String.class);
-				} catch (Exception e) {
-					logger.info("failed : "+data);
-				}
-				//if(result.size()>0) 
-					//logger.info("success : "+result.get(0));
-			});
+			datas.parallelStream().forEach(data -> this.upsert(ArangoDBEntity.toMap(data)));
 			return 0;
 		}catch (Exception e) {
 		}
@@ -405,6 +333,7 @@ public class ArangoDBConnection extends DataConnection<ArangoDBAsync>{
 	 * @param param  coming param  must contains  attribute _id, like this {"_id":"collections_name/xxxxx"}
 	 * @return 0 success  1 failed
 	 */
+	@Deprecated
 	public int upsertNode(JSONObject _node) {
 		try {
 			if(_node.containsKey("_id") && null !=_node.get("_id") && !StringUtils.isEmpty(_node.get("_id").toString())) {
@@ -431,6 +360,7 @@ public class ArangoDBConnection extends DataConnection<ArangoDBAsync>{
 	 * @param param  coming param  must contains  attributes _id _from _to, like this {"_id":"collections_name/xxxxx", "_from":"collections_name/xxxxx", "_to":"collections_name/xxxxx"}
 	 * @return 0 success  1 failed
 	 */
+	@Deprecated
 	public int upsertEdge(JSONObject _edge) {
 		try {
 			if(_edge.containsKey("_id") && null !=_edge.get("_id") && !StringUtils.isEmpty(_edge.get("_id").toString()) &&
@@ -469,14 +399,76 @@ public class ArangoDBConnection extends DataConnection<ArangoDBAsync>{
 	}
 	
 	
-	@Override
-	public void close() throws IOException {
-		db.shutdown();
-	}
+	
+	
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public ArangoOutput outputRaw(TableDesc... table) throws IOException {
-		return new ArangoOutput("ArangoOutput", this);
+	/**
+	 * arangodb node upsert
+	 * @param data
+	 * @return 0 success  1 failed
+	 */
+	public int upsert(Map<String, Object> data) {
+		try {
+			Object _id = null;
+			String _key = null;
+			String table = null;
+			if (!data.containsKey("_id") || null == (_id = data.get("_id")) || StringUtils.isEmpty(_id.toString()))
+				throw new Exception();
+			else {
+				String[] tmp = _id.toString().split("/");
+				if(tmp.length < 2 || StringUtils.isEmpty(tmp[0]) || StringUtils.isEmpty(tmp[1])) 
+					throw new Exception();
+				else {
+					table = tmp[0];
+					_key = tmp[1];
+					data.remove("_id");
+					data.put("_key", _key);
+					String aql = ArangoDBLanguage.getAql(data, table);
+					this.executeAQL(aql, data, BaseDocument.class);
+					return 0;
+				}
+			}
+		} catch (Exception e) {
+			logger.error("failed : " + e.getMessage());
+		}
+		return 1;
+	}
+	
+	/**
+	 * arangodb node upsert
+	 * @param data
+	 * @return 0 success  1 failed
+	 */
+	public int upserts(List<Map<String, Object>> datas) {
+		datas.parallelStream().forEach(data ->{
+			try {
+				Object _id = null;
+				String _key = null;
+				String table = null;
+				if (!data.containsKey("_id") || null == (_id = data.get("_id")) || StringUtils.isEmpty(_id.toString()))
+					throw new Exception();
+				else {
+					String[] tmp = _id.toString().split("/");
+					if(tmp.length < 2 || StringUtils.isEmpty(tmp[0]) || StringUtils.isEmpty(tmp[1])) 
+						throw new Exception();
+					else {
+						table = tmp[0];
+						_key = tmp[1];
+						data.remove("_id");
+						data.put("_key", _key);
+						String aql = ArangoDBLanguage.getAql(data, table);
+						this.executeAQL(aql, data, BaseDocument.class);
+					}
+				}
+			} catch (Exception e) {
+				logger.error("failed : " + e.getMessage());
+			}
+		});
+		return 1;
+	}
+	
+	public <T> List<T> executeAQL(String aql, Map<String, Object> data, Class<T> clazz) {
+		return database.query(aql, data, clazz).toCompletableFuture().join().asListRemaining();
 	}
 }
+
