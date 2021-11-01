@@ -64,11 +64,11 @@ public class ArangoDBEntity extends ConcurrentHashMap<Object, Object>{
 		Map<String, Object> map = new HashMap<String, Object>();
 		if(data instanceof ArangoDBNode) {
 			ArangoDBNode node = (ArangoDBNode)data;
-			map = Maps.of("id", node.table+"/"+node.key);
+			map = Maps.of("_id", node.table+"/"+node.key);
 			for (Entry<Object, Object> kv : node.entrySet()) map.put(kv.getKey().toString(), kv.getValue());
 		}else if(data instanceof ArangoDBEdge){
 			ArangoDBEdge edge = (ArangoDBEdge)data;
-			map = Maps.of("id", edge.table+"/"+edge.key, "_form", edge.from, "_to", edge.to);
+			map = Maps.of("_id", edge.table+"/"+edge.key, "_form", edge.from, "_to", edge.to);
 			for (Entry<Object, Object> kv : edge.entrySet()) map.put(kv.getKey().toString(), kv.getValue());
 		}else {
 			logger.info("unsurport data type");
