@@ -379,11 +379,15 @@ public class ArangoDBConnection  extends DataConnection<ArangoDBAsync>{
 	}
 	
 	public <T> List<T> executeAQL(String aql, Map<String, Object> data, Class<T> clazz) {
-		return database.query(aql, data, clazz).toCompletableFuture().join().asListRemaining();
+		return database.query(aql, data, clazz).toCompletableFuture().whenComplete((s, e) -> {
+			logger.info(" result -> aql: "+aql+"     data:"+ data + "    "+ (null == e ? "" : " error msg"+e.getMessage()));
+        }).join().asListRemaining();
 	}
 	
 	public <T> List<T> executeAQL(String aql, Class<T> clazz) {
-		return database.query(aql, clazz).toCompletableFuture().join().asListRemaining();
+		return database.query(aql, clazz).toCompletableFuture().whenComplete((s, e) -> {
+			logger.info(" result -> aql: "+aql+ "    "+ (null == e ? "" : " error msg"+e.getMessage()));
+        }).join().asListRemaining();
 	}
 	
 	
