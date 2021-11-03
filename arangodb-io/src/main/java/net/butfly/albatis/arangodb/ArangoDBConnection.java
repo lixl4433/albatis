@@ -1,6 +1,8 @@
 package net.butfly.albatis.arangodb;
 
 import java.io.IOException;
+import java.text.Format;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,7 +13,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.fastjson.JSONObject;
 import com.arangodb.async.ArangoCollectionAsync;
 import com.arangodb.async.ArangoDBAsync;
 import com.arangodb.async.ArangoDBAsync.Builder;
@@ -176,10 +177,6 @@ public class ArangoDBConnection  extends DataConnection<ArangoDBAsync>{
 		return new ArangoOutput("ArangoOutput", this);
 	}
 	
-	public <T> List<T> executeAQL(String aql, Class<T> clazz) {
-		return database.query(aql, clazz).toCompletableFuture().join().asListRemaining();
-	}
-	
 	/**
 	 * @param name . node name
 	 * @return 0 failed 1 success 2 exist
@@ -293,59 +290,6 @@ public class ArangoDBConnection  extends DataConnection<ArangoDBAsync>{
 	}
 	
 	/**
-	 * arangodb node upsert
-	 * @param data
-	 * @return 0 success  1 failed
-	 */
-	@Deprecated
-	public int upsertNode(ArangoDBNode data) {
-		return this.upsert(ArangoDBEntity.toMap(data));
-	}
-	
-	/**
-	 * arangodb node batch upsert
-	 * @param List<ArangoDBNode> datas
-	 * @return 0 success  1 failed
-	 * @apiNote disorder insert
-	 */
-	@Deprecated
-	public int upsertNodes(List<ArangoDBNode> datas) {
-		try {
-			datas.parallelStream().forEach(data -> this.upsert(ArangoDBEntity.toMap(data)));
-			return 0;
-		}catch (Exception e) {
-		}
-		return 1;
-	}
-	
-	/**
-	 * arangodb edge upsert
-	 * @param data
-	 * @return 0 success  1 failed
-	 */
-	@Deprecated
-	public int upsertEdge(ArangoDBEdge data) {
-		return this.upsert(ArangoDBEntity.toMap(data));
-	}
-	
-	/**
-	 * arangodb edge batch upsert
-	 * @param List<ArangoDBEdge> datas
-	 * @return 0 success  1 failed
-	 * @apiNote disorder insert
-	 */
-	@Deprecated
-	public int upsertEdges(List<ArangoDBEdge> datas) {
-		try {
-			datas.parallelStream().forEach(data -> this.upsert(ArangoDBEntity.toMap(data)));
-			return 0;
-		}catch (Exception e) {
-		}
-		return 1;
-	}
-	
-	
-	/**
 	 * use _id remove one document
 	 * @param _id   xxxx/xxxx   e.g. people/100
 	 * @return 0 success  1 failed
@@ -368,81 +312,6 @@ public class ArangoDBConnection  extends DataConnection<ArangoDBAsync>{
 		}
 		return 1;
 	}
-	
-	
-	/**
-	 * arangodb node upsert
-	 * @param param  coming param  must contains  attribute _id, like this {"_id":"collections_name/xxxxx"}
-	 * @return 0 success  1 failed
-	 */
-	@Deprecated
-	public int upsertNode(JSONObject _node) {
-		try {
-			if(_node.containsKey("_id") && null !=_node.get("_id") && !StringUtils.isEmpty(_node.get("_id").toString())) {
-				String _key = _node.get("_id").toString();
-				String[] key_table = _key.split("/");
-				if(key_table.length ==2 && !StringUtils.isEmpty(key_table[0]) && !StringUtils.isEmpty(key_table[1])) {
-					ArangoDBNode node = new ArangoDBNode();
-					node.key = key_table[1];
-					node.table = key_table[0];
-					_node.remove("_id");
-					_node.entrySet().forEach(n -> node.put(n.getKey(), n.getValue()));
-					return this.upsertNode(node);
-				}
-			}
-		}catch (Exception e) {
-			logger.info("fialed : add node["+_node+"] .");
-		}
-		return 1;
-	}
-	
-	
-	/**
-	 * arangodb edge upsert
-	 * @param param  coming param  must contains  attributes _id _from _to, like this {"_id":"collections_name/xxxxx", "_from":"collections_name/xxxxx", "_to":"collections_name/xxxxx"}
-	 * @return 0 success  1 failed
-	 */
-	@Deprecated
-	public int upsertEdge(JSONObject _edge) {
-		try {
-			if(_edge.containsKey("_id") && null !=_edge.get("_id") && !StringUtils.isEmpty(_edge.get("_id").toString()) &&
-				_edge.containsKey("_from") && null !=_edge.get("_from") && !StringUtils.isEmpty(_edge.get("_from").toString()) &&
-				_edge.containsKey("_to") && null !=_edge.get("_to") && !StringUtils.isEmpty(_edge.get("_to").toString())) {
-				
-				String _key = _edge.get("_id").toString();
-				String[] key_table = _key.split("/");
-				
-				String _from = _edge.get("_from").toString();
-				String[] from_key_table = _from.split("/");
-				
-				String _to = _edge.get("_to").toString();
-				String[] to_key_table = _to.split("/");
-				
-				if(key_table.length ==2 && !StringUtils.isEmpty(key_table[0]) && !StringUtils.isEmpty(key_table[1]) &&
-					from_key_table.length ==2 && !StringUtils.isEmpty(from_key_table[0]) && !StringUtils.isEmpty(from_key_table[1]) &&
-					to_key_table.length ==2 && !StringUtils.isEmpty(to_key_table[0]) && !StringUtils.isEmpty(to_key_table[1])) {
-					
-					ArangoDBEdge edge = new ArangoDBEdge();
-					edge.key = key_table[1];
-					edge.table = key_table[0];
-					edge.from = _from;
-					edge.to = _to;
-					_edge.remove("_id");
-					_edge.remove("_from");
-					_edge.remove("_to");
-					_edge.entrySet().forEach(n -> edge.put(n.getKey(), n.getValue()));
-					return this.upsertEdge(edge);
-				}
-			}
-		}catch (Exception e) {
-			logger.info("fialed : add node["+_edge+"] .");
-		}
-		return 1;
-	}
-	
-	
-	
-	
 
 	/**
 	 * arangodb node upsert
@@ -465,7 +334,7 @@ public class ArangoDBConnection  extends DataConnection<ArangoDBAsync>{
 					_key = tmp[1];
 					data.remove("_id");
 					data.put("_key", _key);
-					String aql = ArangoDBLanguage.getAql(data, table);
+					String aql = getAql(data, table);
 					this.executeAQL(aql, data, BaseDocument.class);
 					return 0;
 				}
@@ -498,7 +367,7 @@ public class ArangoDBConnection  extends DataConnection<ArangoDBAsync>{
 						_key = tmp[1];
 						data.remove("_id");
 						data.put("_key", _key);
-						String aql = ArangoDBLanguage.getAql(data, table);
+						String aql = getAql(data, table);
 						this.executeAQL(aql, data, BaseDocument.class);
 					}
 				}
@@ -511,6 +380,27 @@ public class ArangoDBConnection  extends DataConnection<ArangoDBAsync>{
 	
 	public <T> List<T> executeAQL(String aql, Map<String, Object> data, Class<T> clazz) {
 		return database.query(aql, data, clazz).toCompletableFuture().join().asListRemaining();
+	}
+	
+	public <T> List<T> executeAQL(String aql, Class<T> clazz) {
+		return database.query(aql, clazz).toCompletableFuture().join().asListRemaining();
+	}
+	
+	
+	protected static final Format AQL_UPSERT = new MessageFormat("upsert '{'_key: @_key} insert {1} update {1} in {0} OPTIONS '{' exclusive: true '}' return NEW"); //
+
+	@Override
+	public String toString() {
+		return super.toString();
+	}
+
+	private static String parseAqlAsBindParams(Map<String, Object> data) {
+		return "{" + data.keySet().stream().map(k -> k + ": @" + k).collect(Collectors.joining(", ")) + "}";
+	}
+	
+	public static String getAql(Map<String, Object> data, String table){
+		String aql = AQL_UPSERT.format(new String[] { table, parseAqlAsBindParams(data)});
+		return aql;
 	}
 }
 
