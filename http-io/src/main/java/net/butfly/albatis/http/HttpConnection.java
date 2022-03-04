@@ -62,4 +62,11 @@ public class HttpConnection extends DataConnection<HttpClient> {
 			logger.error("Close failure", e);
 		}
 	}
+	
+	public static void main(String[] args) {
+		String url = "http://localhost:9999/feature/insert";
+		URISpec uri = new URISpec(url);
+		String Url = "http://" + uri.getHost() + uri.getPath();
+		System.out.println(Url);
+	}
 }

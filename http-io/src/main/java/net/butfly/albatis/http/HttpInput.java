@@ -23,9 +23,9 @@ public class HttpInput extends net.butfly.albacore.base.Namedly implements OddIn
 	public URISpec url;
 	private static HttpClient client;
 
-	public HttpInput(String name, HttpClient client) {
+	public HttpInput(String name, HttpConnection conn) {
 		super(name);
-		this.client = client;
+		this.client = conn.httpClient;
 	}
 
 	public static ThreadLocal<ObjectMapper> httpGetMapper = new ThreadLocal<ObjectMapper>() {
@@ -44,8 +44,7 @@ public class HttpInput extends net.butfly.albacore.base.Namedly implements OddIn
 	private static String httpPost(URISpec uri) {
 		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
 		String now = df.format(new Date());
-		String Url = "http://" + uri.getHost() + ":" + uri.getDefaultPort() + uri.getUsername() + "?"
-				+ uri.getPassword() + now;
+		String Url = "http://" + uri.getHost() + uri.getPath();
 		HttpPost httppost = new HttpPost(Url);
 		HttpResponse response = null;
 		try {
