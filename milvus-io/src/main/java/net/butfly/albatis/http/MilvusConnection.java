@@ -173,7 +173,16 @@ public class MilvusConnection extends DataConnection<MilvusServiceClient> {
 	}
 	
 	
-	
-	
+	public static void main(String[] args) {
+		try {
+			URISpec uri = new URISpec("milvus://minioadmin:minioadmin@192.168.0.208:19530/img_feature");
+			MilvusConnection conn = new MilvusConnection(uri);
+			//MilvusServiceClient c = conn.initialize(uri);
+			System.out.println("----------------");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 }

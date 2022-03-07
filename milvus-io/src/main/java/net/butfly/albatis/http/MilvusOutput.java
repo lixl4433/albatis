@@ -6,7 +6,8 @@ import net.butfly.albacore.paral.Sdream;
 import net.butfly.albatis.io.OutputBase;
 import net.butfly.albatis.io.Rmap;
 
-public class HttpOutput extends OutputBase<Rmap> {
+public class MilvusOutput extends OutputBase<Rmap> {
+
 	private static final long serialVersionUID = 5114292900867103434L;
 	//private static final Logger logger = new Logger(HttpOutput.class);
 	private final MilvusConnection conn;;
@@ -15,7 +16,7 @@ public class HttpOutput extends OutputBase<Rmap> {
 	 * @param name output name
 	 * @param conn standard http connection
 	 */
-	public HttpOutput(String name, MilvusConnection conn) {
+	public MilvusOutput(String name, MilvusConnection conn) {
 		super(name);
 		this.conn = conn;
 		closing(this::close);
