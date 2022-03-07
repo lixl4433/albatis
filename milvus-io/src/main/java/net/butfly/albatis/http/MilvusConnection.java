@@ -154,22 +154,26 @@ public class MilvusConnection extends DataConnection<MilvusServiceClient> {
 	
 	@SuppressWarnings("unchecked")
 	public static Object getFieldVal(Object value, DataType dataType) {
-		switch (dataType) {
-		case Int8:
-			return Integer.parseInt((String)value);
-		case Int16:
-			return Integer.parseInt((String)value);
-		case Int32:
-			return Integer.parseInt((String)value);
-		case Int64:
-			return Long.parseLong((String) value);
-		case FloatVector:
-			return  (List<Float>)value;
-		case BinaryVector:
-			return (List<Byte>)value;
-		default:
-			return Integer.parseInt((String)value);
+		try {
+			switch (dataType) {
+			case Int8:
+				return Integer.parseInt(value.toString());
+			case Int16:
+				return Integer.parseInt(value.toString());
+			case Int32:
+				return Integer.parseInt(value.toString());
+			case Int64:
+				return Long.parseLong(value.toString());
+			case FloatVector:
+				return  (List<Float>)value;
+			case BinaryVector:
+				return (List<Byte>)value;
+			default:
+				return Integer.parseInt((String)value);
+			}
+		} catch (Exception e) {
 		}
+		return null;
 	}
 	
 	
