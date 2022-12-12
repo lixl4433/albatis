@@ -142,6 +142,17 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+	
+		<distributionManagement>
+		<snapshotRepository>
+			<id>maven-snapshots</id>
+			<url>http://hzzzlc.tpddns.cn:18081/repository/maven-snapshots/</url>
+		</snapshotRepository>
+		<repository>
+			<id>maven-releases</id>
+			<url>http://hzzzlc.tpddns.cn:18081/repository/maven-releases/</url>
+		</repository>
+	</distributionManagement>
 		<!--
 	<repositories>
 		<repository>

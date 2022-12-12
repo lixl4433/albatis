@@ -94,16 +94,19 @@ public abstract class ElasticOutputBase<T extends DataConnection<?> & ElasticCon
 			Rmap o = remains.remove(r.getIndex() + "/" + r.getType() + r.getId());
 			if (!r.isFailed()) {
 				succs++;
-				/*
 				if (null != o && null != r.getResponse()) {
 					if(o.containsKey("ocr_result"))
 						o.remove("ocr_result");
+					if(o.containsKey("files"))
+						o.remove("files");
 					logger.info(() -> "es writing successed: \n\tData: " + o.toString() + "\n\tResp: " + r.getResponse().toString());
-				}*/
+				}
 			} else if (null != o) {
 				if (noRetry(r.getFailure().getCause())) {
 					if(o.containsKey("ocr_result"))
 						o.remove("ocr_result");
+					if(o.containsKey("files"))
+						o.remove("files");
 					logger.error(() -> "ElasticOutput [" + name() + "] failed for [" + unwrap(r.getFailure().getCause()).toString() + "]: \n\t" + o.toString());
 				}
 				else retries.add(o);

@@ -32,8 +32,10 @@ public class ElasticOutput extends ElasticOutputBase<ElasticConnection> {
 				return conn.client.bulk(b).get();
 			} catch (ExecutionException ex) {
 				logger().error("Elastic client fail: [" + ex.getCause() + "]");
+				System.out.println("------------------"+ex);
 			} catch (Exception ex) {
 				logger().error("Elastic client fail: [" + ex + "]");
+				System.out.println("------------------"+ex);
 				// } finally {
 				// logger().error("Elastic step [" + size + "] spent: " + (System.currentTimeMillis() - now) + " ms.");
 			}

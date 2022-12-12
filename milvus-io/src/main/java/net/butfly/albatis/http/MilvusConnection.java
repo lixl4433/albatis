@@ -23,6 +23,7 @@ import io.milvus.param.dml.InsertParam;
 import io.milvus.param.dml.InsertParam.Field;
 import net.butfly.albacore.io.URISpec;
 import net.butfly.albacore.utils.collection.Colls;
+import net.butfly.albacore.utils.logger.Logger;
 import net.butfly.albatis.DataConnection;
 import net.butfly.albatis.ddl.TableDesc;
 import net.butfly.albatis.io.Rmap;
@@ -32,6 +33,7 @@ public class MilvusConnection extends DataConnection<MilvusServiceClient> {
 	public MilvusServiceClient milvusServiceClient;
 	public URISpec url;
 	private static Map<String, List<FieldSchema>>  collectionOrderlyFields = new HashMap<String, List<FieldSchema>>();
+	private static final Logger logger = Logger.getLogger(MilvusConnection.class);
 	
 	public MilvusConnection(URISpec uri) throws IOException {
 		super(uri, schema);
@@ -135,13 +137,16 @@ public class MilvusConnection extends DataConnection<MilvusServiceClient> {
 					String fieldName = fieldSchema.getName();
 					DataType fieldDataType = fieldSchema.getDataType();
 					List<Object> fieldCache = new ArrayList<>();
-					datas.parallelStream().forEach(data -> {
+					for (Rmap data : datas) {
+						if(fieldSchema.getIsPrimaryKey()) 
+							logger.info(data.get(fieldName).toString());
 						if (data.containsKey(fieldName)) {
 							fieldCache.add(getFieldVal(data.get(fieldName), fieldDataType));
 						} else {
 							fieldCache.add(null);
 						}
-					});
+					}
+					//datas.parallelStream().forEach(data -> {});
 					fields.add(new Field(fieldName, fieldDataType, fieldCache));
 				}
 				milvusServiceClient
@@ -181,6 +186,7 @@ public class MilvusConnection extends DataConnection<MilvusServiceClient> {
 		try {
 			URISpec uri = new URISpec("milvus://minioadmin:minioadmin@192.168.0.208:19530/img_feature");
 			MilvusConnection conn = new MilvusConnection(uri);
+			System.out.println(conn);
 			//MilvusServiceClient c = conn.initialize(uri);
 			System.out.println("----------------");
 		} catch (IOException e) {
